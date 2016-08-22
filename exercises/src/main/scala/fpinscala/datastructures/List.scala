@@ -60,7 +60,11 @@ object List { // `List` companion object. Contains functions for creating and wo
     case List(_, t) => List(h, t)
   }
 
-  def drop[A](l: List[A], n: Int): List[A] = sys.error("todo")
+  def drop[A](l: List[A], n: Int): List[A] = {
+    case (_, _) if n <= 0 => l
+    case (Nil, _) => Nil
+    case (_, _) => drop(tail(l), n - 1)
+  }
 
   def dropWhile[A](l: List[A], f: A => Boolean): List[A] = sys.error("todo")
 
