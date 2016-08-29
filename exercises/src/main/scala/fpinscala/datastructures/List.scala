@@ -131,4 +131,11 @@ object List { // `List` companion object. Contains functions for creating and wo
     else Nil
   )
 
+  def sumPairs(a1: List[Int], a2: List[Int]): List[Int] = (a1, a2) match {
+    case (Nil, Nil) => Nil
+    case (xs, Nil) => xs
+    case (Nil, xs) => xs
+    case (Cons(y, ys), Cons(x, xs)) => Cons(y + x, sumPairs(ys, xs))
+  }
+
 }
