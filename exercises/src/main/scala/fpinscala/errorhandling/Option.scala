@@ -73,4 +73,10 @@ object Option {
     case h::t => map2(f(h), traverse(t)(f))(_ :: _)
   }
 
+  def map2WithFor[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
+    for {
+      aa <- a
+      bb <- b
+    } yield f(aa, bb)
+
 }
