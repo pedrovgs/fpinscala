@@ -116,4 +116,11 @@ object List { // `List` companion object. Contains functions for creating and wo
   def toListString(l: List[Double]): List[String] = foldRight(l, List[String]())((x, acc) => Cons(x.toString, acc))
 
   def map[A,B](l: List[A])(f: A => B): List[B] = foldRight(l, List[B]())((x, acc) => Cons(f(x), acc))
+
+  def filter[A](l: List[A])(f: A => Boolean): List[A] =
+     foldRight(l, List[A]()) { (x, acc) => {
+        if (f(x)) Cons(x, acc)
+        else acc
+       }
+     }
 }
