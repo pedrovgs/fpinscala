@@ -30,7 +30,11 @@ object RNG {
       (f(a), rng2)
     }
 
-  def nonNegativeInt(rng: RNG): (Int, RNG) = ???
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val result = rng.nextInt
+    if (result._1 >= 0) result
+    else ((result._1 + 1) * -1, result._2)
+  }
 
   def double(rng: RNG): (Double, RNG) = ???
 
