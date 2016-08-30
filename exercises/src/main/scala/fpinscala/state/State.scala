@@ -36,7 +36,15 @@ object RNG {
     else ((result._1 + 1) * -1, result._2)
   }
 
-  def double(rng: RNG): (Double, RNG) = ???
+  def double(rng: RNG): (Double, RNG) = {
+    val (value, random) = nonNegativeInt(rng)
+    if (value == Int.MaxValue) {
+      ((value - 1) / Int.MaxValue.toDouble, random)
+    } else {
+      (value/Int.MaxValue.toDouble, random)
+    }
+
+  }
 
   def intDouble(rng: RNG): ((Int,Double), RNG) = ???
 
