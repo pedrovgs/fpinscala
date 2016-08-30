@@ -45,7 +45,6 @@ object RNG {
     } else {
       (value/Int.MaxValue.toDouble, random)
     }
-
   }
 
   def intDouble(rng: RNG): ((Int,Double), RNG) = {
@@ -77,6 +76,8 @@ object RNG {
     }
     go(count,rng, List[Int]())
   }
+
+  def double2(rng: Rand[Double]): Rand[Double] = map(nonNegativeInt)(_ / Int.MaxValue.toDouble + 1)
 
   def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
 
