@@ -9,6 +9,20 @@ object Par {
   def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
 
   def unit[A](a: A): Par[A] = (es: ExecutorService) => UnitFuture(a) // `unit` is represented as a function that returns a `UnitFuture`, which is a simple implementation of `Future` that just wraps a constant value. It doesn't use the `ExecutorService` at all. It's always done and can't be cancelled. Its `get` method simply returns the value that we gave it.
+
+  def lazyUnit[A](a: => A): Par[A] = fork(unit(a))
+
+  def asyncF[A, B](f: A => B): A => Par[B] = (a: A) => lazyUnit(f(a))
+
+  def sequence[A](ps: List[Par[A]]): Par[List[A]] = {
+    ps.foldRight[Par[List[A]]](unit(List()))((h,t) => map2(h,t)(_ :: _))
+  }
+
+  def sequence2[A](as: List[Par[A]]): Par[List[A]] =
+    as match {
+      case Nil => unit(Nil)
+      case h :: t => map2(h, fork(sequence2(t)))(_ :: _)
+    }
   
   private case class UnitFuture[A](get: A) extends Future[A] {
     def isDone = true 
@@ -93,5 +107,7 @@ object Examples {
       val (l,r) = ints.splitAt(ints.length/2) // Divide the sequence in half using the `splitAt` function.
       sum(l) + sum(r) // Recursively sum both halves and add the results together.
     }
+
+
 
 }
