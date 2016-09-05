@@ -45,8 +45,17 @@ object Gen {
 }
 
 case class Gen[A](sample: State[RNG, A]) {
-  def map[A,B](f: A => B): Gen[B] = ???
-  def flatMap[A,B](f: A => Gen[B]): Gen[B] = ???
+  def map[B](f: A => B): Gen[B] =
+    Gen(sample.map(f))
+
+  def flatMap[B](f: A => Gen[B]): Gen[B] =
+    Gen(sample.flatMap(a => f(a).sample))
+
+  def listOfN(size: Int): Gen[List[A]] =
+    Gen.listOfN(size, this)
+
+  def listOfN(size: Gen[Int]): Gen[List[A]] =
+    size flatMap (n => this.listOfN(n))
 }
 
 trait SGen[+A] {
