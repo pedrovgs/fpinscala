@@ -38,6 +38,12 @@ object RNG {
     else ((result._1 + 1) * -1, result._2)
   }
 
+  def boolean(rng: RNG): (Boolean, RNG) = {
+    val nonNegative = nonNegativeInt(rng)
+    if (nonNegative._1 % 2 == 0) (true, nonNegative._2)
+    else (false, nonNegative._2)
+  }
+
   def double(rng: RNG): (Double, RNG) = {
     val (value, random) = nonNegativeInt(rng)
     if (value == Int.MaxValue) {
