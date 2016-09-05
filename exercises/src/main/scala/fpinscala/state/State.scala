@@ -141,4 +141,13 @@ object State {
     State(s => (a, s))
 
   def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
+
+  def sequence[S, A](sas: List[State[S, A]]): State[S, List[A]] = {
+    def go(s: S, actions: List[State[S,A]], acc: List[A]): (List[A],S) =
+      actions match {
+        case Nil => (acc.reverse,s)
+        case h :: t => h.run(s) match { case (a,s2) => go(s2, t, a :: acc) }
+      }
+    State((s: S) => go(s,sas,List()))
+  }
 }
