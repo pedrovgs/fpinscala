@@ -42,6 +42,9 @@ object Gen {
   def choose(start: Int, stopExclusive: Int): Gen[Int] = {
     Gen(State(RNG.nonNegativeInt).map(n => start + n % (stopExclusive - start)))
   }
+
+  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
+    boolean.flatMap(b => if (b) g1 else g2)
 }
 
 case class Gen[A](sample: State[RNG, A]) {
