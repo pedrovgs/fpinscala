@@ -160,7 +160,7 @@ object Monoid {
         Part("", 0, "")
       else
         Stub(c.toString)
-    
+
     def unstub(s: String) = s.length min 1
     foldMapV(s.toIndexedSeq, wcMonoid)(wc) match {
       case Stub(s) => unstub(s)
@@ -202,27 +202,29 @@ trait Foldable[F[_]] {
 
 object ListFoldable extends Foldable[List] {
   override def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B) =
-    sys.error("todo")
+    as.foldRight(z)(f)
   override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B) =
-    sys.error("todo")
+    as.foldLeft(z)(f)
   override def foldMap[A, B](as: List[A])(f: A => B)(mb: Monoid[B]): B =
-    sys.error("todo")
+    foldLeft(as)(mb.zero)((b, a) => mb.op(b, f(a)))
+  override def toList[A](as: List[A]): List[A] = as
 }
 
 object IndexedSeqFoldable extends Foldable[IndexedSeq] {
+  import Monoid._
   override def foldRight[A, B](as: IndexedSeq[A])(z: B)(f: (A, B) => B) =
-    sys.error("todo")
+    as.foldRight(z)(f)
   override def foldLeft[A, B](as: IndexedSeq[A])(z: B)(f: (B, A) => B) =
-    sys.error("todo")
+    as.foldLeft(z)(f)
   override def foldMap[A, B](as: IndexedSeq[A])(f: A => B)(mb: Monoid[B]): B =
-    sys.error("todo")
+    foldMapV(as, mb)(f)
 }
 
 object StreamFoldable extends Foldable[Stream] {
   override def foldRight[A, B](as: Stream[A])(z: B)(f: (A, B) => B) =
-    sys.error("todo")
+    as.foldRight(z)(f)
   override def foldLeft[A, B](as: Stream[A])(z: B)(f: (B, A) => B) =
-    sys.error("todo")
+    as.foldLeft(z)(f)
 }
 
 sealed trait Tree[+A]
