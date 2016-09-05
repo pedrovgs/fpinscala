@@ -81,6 +81,12 @@ object Monoid {
     case x :: xs => m.op(f(x), foldMap(xs, m)(f))
   }
 
+  def foldMapViaFoldLeft[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
+    as.foldLeft(m.zero)((acc, x) => m.op(acc, f(x)))
+
+  def foldMapViaFoldRight[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
+    as.foldRight(m.zero)((x, acc) => m.op(acc, f(x)))
+
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
     sys.error("todo")
 
