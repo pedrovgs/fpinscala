@@ -28,10 +28,15 @@ object Prop {
 }
 
 object Gen {
+
   def unit[A](a: => A): Gen[A] = ???
+
+  def choose(start: Int, stopExclusive: Int): Gen[Int] = {
+    Gen(State(RNG.nonNegativeInt).map(n => start + n % (stopExclusive - start)))
+  }
 }
 
-trait Gen[A] {
+case class Gen[A](sample: State[RNG, A]) {
   def map[A,B](f: A => B): Gen[B] = ???
   def flatMap[A,B](f: A => Gen[B]): Gen[B] = ???
 }
