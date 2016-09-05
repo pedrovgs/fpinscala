@@ -8,6 +8,8 @@ import Gen._
 import Prop._
 import java.util.concurrent.{Executors,ExecutorService}
 
+import sun.security.x509.RDN
+
 /*
 The library developed in this chapter goes through several iterations. This file is just the
 shell, which you can fill in and modify while working through the chapter.
@@ -45,6 +47,13 @@ object Gen {
 
   def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
     boolean.flatMap(b => if (b) g1 else g2)
+
+  def weighted[A](g1: (Gen[A], Double), g2: (Gen[A], Double)): Gen[A] = {
+    val threshold = g1._2.abs / (g1._2.abs + g2._2.abs)
+
+    Gen(State(RNG.double).flatMap(d =>
+      if (d <= threshold) g1._1.sample else g2._1.sample))
+  }
 }
 
 case class Gen[A](sample: State[RNG, A]) {
