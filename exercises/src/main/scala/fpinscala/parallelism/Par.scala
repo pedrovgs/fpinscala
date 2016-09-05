@@ -23,7 +23,17 @@ object Par {
       case Nil => unit(Nil)
       case h :: t => map2(h, fork(sequence2(t)))(_ :: _)
     }
-  
+
+  def parMap[A, B](ps: List[A])(f: A => B): Par[List[B]] = fork {
+    val fbs: List[Par[B]] = ps.map(asyncF(f))
+    sequence(fbs)
+  }
+
+  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = fork {
+    val pars: List[Par[List[A]]] = l map asyncF((a: A) => if (f(a)) List(a) else List())
+    map(sequence(pars))(_.flatten) // convenience method on `List` for concatenating a list of lists
+  }
+
   private case class UnitFuture[A](get: A) extends Future[A] {
     def isDone = true 
     def get(timeout: Long, units: TimeUnit) = get 
