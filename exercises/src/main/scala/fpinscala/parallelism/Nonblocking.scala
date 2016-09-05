@@ -42,26 +42,28 @@ object Nonblocking {
       }
 
     /**
-     * Helper function for constructing `Par` values out of calls to non-blocking continuation-passing-style APIs.
-     * This will come in handy in Chapter 13.
-     */
+      * Helper function for constructing `Par` values out of calls to non-blocking continuation-passing-style APIs.
+      * This will come in handy in Chapter 13.
+      */
     def async[A](f: (A => Unit) => Unit): Par[A] = es => new Future[A] {
       def apply(k: A => Unit) = f(k)
     }
 
     /**
-     * Helper function, for evaluating an action
-     * asynchronously, using the given `ExecutorService`.
-     */
+      * Helper function, for evaluating an action
+      * asynchronously, using the given `ExecutorService`.
+      */
     def eval(es: ExecutorService)(r: => Unit): Unit =
       es.submit(new Callable[Unit] { def call = r })
-
 
     def map2[A,B,C](p: Par[A], p2: Par[B])(f: (A,B) => C): Par[C] =
       es => new Future[C] {
         def apply(cb: C => Unit): Unit = {
           var ar: Option[A] = None
           var br: Option[B] = None
+          // this implementation is a little too liberal in forking of threads -
+          // it forks a new logical thread for the actor and for stack-safety,
+          // forks evaluation of the callback `cb`
           val combiner = Actor[Either[A,B]](es) {
             case Left(a) =>
               if (br.isDefined) eval(es)(cb(f(a,br.get)))
@@ -106,6 +108,12 @@ object Nonblocking {
     def sequence[A](as: List[Par[A]]): Par[List[A]] =
       map(sequenceBalanced(as.toIndexedSeq))(_.toList)
 
+    def parMap[A,B](as: List[A])(f: A => B): Par[List[B]] =
+      sequence(as.map(asyncF(f)))
+
+    def parMap[A,B](as: IndexedSeq[A])(f: A => B): Par[IndexedSeq[B]] =
+      sequenceBalanced(as.map(asyncF(f)))
+
     // exercise answers
 
     /*
@@ -131,43 +139,58 @@ object Nonblocking {
           }
       }
 
-    def choiceN[A](p: Par[Int])(ps: List[Par[A]]): Par[A] = ???
+    /* The code here is very similar. */
+    def choiceN[A](p: Par[Int])(ps: List[Par[A]]): Par[A] =
+      es => new Future[A] {
+        def apply(cb: A => Unit): Unit =
+          p(es) { ind => eval(es) { ps(ind)(es)(cb) }}
+      }
 
     def choiceViaChoiceN[A](a: Par[Boolean])(ifTrue: Par[A], ifFalse: Par[A]): Par[A] =
-      ???
+      choiceN(map(a)(b => if (b) 0 else 1))(List(ifTrue, ifFalse))
 
     def choiceMap[K,V](p: Par[K])(ps: Map[K,Par[V]]): Par[V] =
-      ???
+      es => new Future[V] {
+        def apply(cb: V => Unit): Unit =
+          p(es)(k => ps(k)(es)(cb))
+      }
 
-    // see `Nonblocking.scala` answers file. This function is usually called something else!
+    /* `chooser` is usually called `flatMap` or `bind`. */
     def chooser[A,B](p: Par[A])(f: A => Par[B]): Par[B] =
-      ???
+      flatMap(p)(f)
 
     def flatMap[A,B](p: Par[A])(f: A => Par[B]): Par[B] =
-      ???
+      es => new Future[B] {
+        def apply(cb: B => Unit): Unit =
+          p(es)(a => f(a)(es)(cb))
+      }
 
-    def choiceViaChooser[A](p: Par[Boolean])(f: Par[A], t: Par[A]): Par[A] =
-      ???
+    def choiceViaFlatMap[A](p: Par[Boolean])(f: Par[A], t: Par[A]): Par[A] =
+      flatMap(p)(b => if (b) t else f)
 
-    def choiceNChooser[A](p: Par[Int])(choices: List[Par[A]]): Par[A] =
-      ???
+    def choiceNViaFlatMap[A](p: Par[Int])(choices: List[Par[A]]): Par[A] =
+      flatMap(p)(i => choices(i))
 
     def join[A](p: Par[Par[A]]): Par[A] =
-      ???
+      es => new Future[A] {
+        def apply(cb: A => Unit): Unit =
+          p(es)(p2 => eval(es) { p2(es)(cb) })
+      }
 
     def joinViaFlatMap[A](a: Par[Par[A]]): Par[A] =
-      ???
+      flatMap(a)(x => x)
 
     def flatMapViaJoin[A,B](p: Par[A])(f: A => Par[B]): Par[B] =
-      ???
+      join(map(p)(f))
 
     /* Gives us infix syntax for `Par`. */
     implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
 
-    // infix versions of `map`, `map2`
+    // infix versions of `map`, `map2` and `flatMap`
     class ParOps[A](p: Par[A]) {
       def map[B](f: A => B): Par[B] = Par.map(p)(f)
       def map2[B,C](b: Par[B])(f: (A,B) => C): Par[C] = Par.map2(p,b)(f)
+      def flatMap[B](f: A => Par[B]): Par[B] = Par.flatMap(p)(f)
       def zip[B](b: Par[B]): Par[(A,B)] = p.map2(b)((_,_))
     }
   }
