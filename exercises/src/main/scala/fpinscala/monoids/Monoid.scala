@@ -74,10 +74,12 @@ object Monoid {
   def trimMonoid(s: String): Monoid[String] = sys.error("todo")
 
   def concatenate[A](as: List[A], m: Monoid[A]): A =
-    sys.error("todo")
+    as.foldRight(m.zero)(m.op)
 
-  def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
-    sys.error("todo")
+  def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B = as match {
+    case Nil => m.zero
+    case x :: xs => m.op(f(x), foldMap(xs, m)(f))
+  }
 
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
     sys.error("todo")
