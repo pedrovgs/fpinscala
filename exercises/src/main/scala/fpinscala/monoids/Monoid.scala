@@ -57,6 +57,11 @@ object Monoid {
     override def zero: (A) => A = a => a
   }
 
+  def dual[A](m: Monoid[A]): Monoid[A] = new Monoid[A] {
+    def op(x: A, y: A): A = m.op(y, x)
+    val zero = m.zero
+  }
+
   import fpinscala.testing._
   import Prop._
   def monoidLaw1[A](m: Monoid[A], gen: Gen[A]): Prop =
@@ -88,10 +93,10 @@ object Monoid {
     as.foldRight(m.zero)((x, acc) => m.op(acc, f(x)))
 
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
-    sys.error("todo")
+    foldMap(as, endoMonoid[B])(f.curried)(z)
 
   def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B =
-    sys.error("todo")
+    foldMap(as, dual(endoMonoid[B]))(a => b => f(b, a))(z)
 
   def foldMapV[A, B](as: IndexedSeq[A], m: Monoid[B])(f: A => B): B =
     sys.error("todo")
