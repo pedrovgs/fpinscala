@@ -51,7 +51,11 @@ object Monoid {
     override def zero: Option[A] = None
   }
 
-  def endoMonoid[A]: Monoid[A => A] = sys.error("todo")
+  def endoMonoid[A]: Monoid[A => A] = new Monoid[(A) => A] {
+    override def op(a1: (A) => A, a2: (A) => A): (A) => A = a1 compose a2
+
+    override def zero: (A) => A = a => a
+  }
 
   // TODO: Placeholder for `Prop`. Remove once you have implemented the `Prop`
   // data type from Part 2.
