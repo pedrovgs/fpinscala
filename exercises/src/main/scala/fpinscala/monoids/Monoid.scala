@@ -197,7 +197,7 @@ trait Foldable[F[_]] {
     sys.error("todo")
 
   def toList[A](as: F[A]): List[A] =
-    sys.error("todo")
+    foldRight(as)(List[A]())(_ :: _)
 }
 
 object ListFoldable extends Foldable[List] {
