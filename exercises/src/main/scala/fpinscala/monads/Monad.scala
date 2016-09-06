@@ -92,7 +92,20 @@ object Monad {
     override def unit[A](a: => A): List[A] = List(a)
   }
 
-  def stateMonad[S] = ???
+  class StateMonads[S] {
+    type StateS[A] = State[S, A]
+    val monad = new Monad[StateS] {
+      def unit[A](a: => A): State[S, A] = State(s => (a, s))
+      override def flatMap[A,B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
+        st flatMap f
+    }
+  }
+
+  def stateMonad[S] = new Monad[({type f[x] = State[S, x]})#f] {
+    def unit[A](a: => A): State[S, A] = State(s => (a, s))
+    override def flatMap[A,B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
+      st flatMap f
+  }
 
   val idMonad: Monad[Id] = ???
 
